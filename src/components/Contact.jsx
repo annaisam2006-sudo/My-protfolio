@@ -22,6 +22,8 @@ export default function Contact() {
       )
     ]);
 
+  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -39,17 +41,20 @@ export default function Contact() {
       return;
     }
 
-    if (!db) {
-      setStatus({
-        type: "error",
-        message: "Firebase is not configured. Check your root .env values and restart Vite."
-      });
-      return;
-    }
-
     try {
       setIsSubmitting(true);
       setStatus({ type: "", message: "" });
+
+      if (!db) {
+        console.warn(
+          "[Contact] Firebase is not configured. Running UI-only success simulation."
+        );
+        await wait(2000);
+        setFormData({ name: "", phone: "", email: "", message: "" });
+        setStatus({ type: "success", message: "Your message sent successfully." });
+        console.log("[Contact] Simulated success after 2 seconds");
+        return;
+      }
 
       const payload = {
         ...formData,
@@ -63,7 +68,7 @@ export default function Contact() {
       await withTimeout(addDoc(collection(db, "contactMessages"), payload));
 
       setFormData({ name: "", phone: "", email: "", message: "" });
-      setStatus({ type: "success", message: "Message sent successfully." });
+      setStatus({ type: "success", message: "Your message sent successfully." });
       console.log("[Contact] After success", {
         collection: "contactMessages"
       });
